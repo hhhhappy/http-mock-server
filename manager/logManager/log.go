@@ -10,22 +10,42 @@ import (
 
 var (
 	/* File writer */
-	fileWriterMap = map[string]*os.File{}
-	mutex *sync.RWMutex
+	logFileWriter        *os.File
+	requestFileWriterMap = map[string]*os.File{}
+	mutex                *sync.RWMutex
 )
 
-func init(){
+const messagePattern = `
+[Method]
+%s
+
+[Query] 
+%s
+
+[Header]
+%s
+
+[Body]
+%s
+`
+
+func init() {
 	basePath := configManager.GetConf().LogPath
 
-	err := Mkdir(basePath)
+	err := mkdir(basePath)
 	if err != nil {
 		panic(err)
 	}
 
 	mutex = new(sync.RWMutex)
+
+	logFileWriter, err = os.OpenFile(getLogFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func Mkdir(dir string) error {
+func mkdir(dir string) error {
 	_, err := os.Stat(dir)
 
 	// dir exists
@@ -38,35 +58,60 @@ func Mkdir(dir string) error {
 	return err
 }
 
-// LogInfo logs info-level info
-func Info(msg string, fileName string) {
-	logToFile(msg, fileName)
-}
+// Log received requests
+func LogRequest(method, query, header, body string, fileName string) {
+	msg := fmt.Sprintf(messagePattern, method, query, header, body)
 
-// log to fileManager
-func logToFile(msg string, fileName string) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	var writer *os.File
-	writer, ok := fileWriterMap[fileName]
+	writer, ok := requestFileWriterMap[fileName]
 	if !ok {
 		var err error
-		writer, err = os.OpenFile(GetLogFilePath(fileName), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		writer, err = os.OpenFile(getRequestFilePath(fileName), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 
-		fileWriterMap[fileName] = writer
+		requestFileWriterMap[fileName] = writer
 	}
 
+	logToFile(msg, writer)
+}
+
+// Log system error
+func Log(msg string) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	if logFileWriter == nil {
+		var err error
+		logFileWriter, err = os.OpenFile(getLogFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+	}
+
+	logToFile(msg, logFileWriter)
+}
+
+// log to fileManager
+func logToFile(msg string, writer *os.File) {
 	log.SetOutput(writer)
 	log.SetFlags(log.Ldate | log.Ltime)
 
 	log.Println(fmt.Sprintf("%s", msg))
 }
 
-func GetLogFilePath(fileName string) string {
+// make request file path
+func getRequestFilePath(fileName string) string {
 	basePath := configManager.GetConf().LogPath
-	return fmt.Sprintf("%s%s%s", basePath, "/", fileName + ".log")
+	return fmt.Sprintf("%s%s%s", basePath, "/", fileName+".request")
+}
+
+// make log file path
+func getLogFilePath() string {
+	basePath := configManager.GetConf().LogPath
+	return fmt.Sprintf("%s%s%s", basePath, "/", "error.log")
 }

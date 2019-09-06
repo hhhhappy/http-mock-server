@@ -8,10 +8,18 @@ import (
 )
 
 type Config struct {
-	Port              string   `yaml:"port"`
-	PrintBufferLength int      `yaml:"printBufferLength"`
-	LogPath           string   `yaml:"logPath"`
-	Url               []string `yaml:"url"`
+	Port              string `yaml:"port"`
+	PrintBufferLength int    `yaml:"printBufferLength"`
+	LogPath           string `yaml:"logPath"`
+	UrlList           []Url  `yaml:"urlList"`
+}
+
+type Url struct {
+	Url            string            `yaml:"url"`
+	Type           string            `yaml:"type"`
+	ReturnBodyFile string            `yaml:"returnBodyFile"`
+	Header         map[string]string `yaml:"header"`
+	Status         int               `yaml:"status"`
 }
 
 var conf *Config
@@ -39,4 +47,14 @@ func GetConf() *Config {
 		}
 	})
 	return conf
+}
+
+func (conf Config) GetUrlDefinition(url string) (obj *Url) {
+	for key, unit := range conf.UrlList {
+		if unit.Url == url {
+			return &conf.UrlList[key]
+		}
+	}
+
+	return nil
 }

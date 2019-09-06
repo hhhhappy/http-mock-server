@@ -1,28 +1,43 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"http-mock-server/manager/configManager"
 	"http-mock-server/manager/logManager"
 	"io"
 	"net/http"
 	"path"
+	"strings"
 )
+
+const HttpMethodPost = "POST"
+const HttpMethodGet = "GET"
 
 func main() {
 	router := gin.Default()
 
 	router.Use(func(context *gin.Context) {
 		context.Header("Access-Control-Allow-Origin", "*")
-		context.Header("Access-Control-Allow-Methods", "GET, POST")
-		context.Header("Access-Control-Allow-Headers", "x-requested-with,content-type")
+		context.Header("Access-Control-Allow-Methods", "*")
+		context.Header("Access-Control-Allow-Headers", "*")
 	})
 
-	testGroup := router.Group("/test")
+	testGroup := router.Group("/mock_http")
 	{
-		for _, url := range configManager.GetConf().Url {
-			testGroup.POST(url, callBackAction)
-			testGroup.GET(url, callBackAction)
+		for _, url := range configManager.GetConf().UrlList {
+			switch strings.ToUpper(url.Type) {
+			case HttpMethodPost:
+				testGroup.POST(url.Url, callBackAction)
+				break
+			case HttpMethodGet:
+				testGroup.GET(url.Url, callBackAction)
+				break
+			default:
+				fmt.Println("Method not supported: " + url.Type)
+				return
+			}
 		}
 	}
 
@@ -38,19 +53,48 @@ func main() {
 }
 
 func callBackAction(context *gin.Context) {
-	buf := make([]byte, 1024)
-	var result []byte
+	header,_ := json.MarshalIndent(context.Request.Header, "", "    ")
+	query,_ := json.MarshalIndent(context.Request.URL.Query(), "", "    ")
+
+	// Retrieve Body
+	buf := make([]byte, 128)
+	var body []byte
 	for {
 		n, err := context.Request.Body.Read(buf)
-		result = append(result, buf[0:n]...)
+		body = append(body, buf[0:n]...)
 
 		if err == io.EOF {
 			break
 		}
 	}
-	logManager.Info(string(result), path.Base(context.Request.RequestURI))
-	context.JSON(http.StatusOK, gin.H{
-		"result": 0,
-	})
+
+	baseUrl:= path.Base(strings.Split(context.Request.RequestURI, "?")[0])
+
+	// Log received request
+	logManager.LogRequest(context.Request.Method, string(query), string(header), string(body), baseUrl)
+
+	urlDefine := configManager.GetConf().GetUrlDefinition(baseUrl)
+	if urlDefine == nil {
+		logManager.Log("Can't find url's definition. Please check your configure file. Calling: " + baseUrl)
+		context.String(http.StatusInternalServerError, ``)
+		return
+	}
+
+	if urlDefine.Status == 0 {
+		urlDefine.Status = http.StatusOK
+	}
+
+	if len(urlDefine.ReturnBodyFile) == 0 {		// Don't have custom return body, return default body
+		context.String(urlDefine.Status, `Hi, world. This is a greeting from Hhhhappy !`)
+	}else{
+		context.File(urlDefine.ReturnBodyFile)
+		context.Status(urlDefine.Status)
+	}
+
+	// Set custom header
+	for key, value := range urlDefine.Header {
+		context.Header(key, value)
+	}
+
 	return
 }
