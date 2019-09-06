@@ -3,15 +3,15 @@ logPath: ./   # Log output directory
 urlList:          # Define your listen URL
     # Custom Url
     # With this value, final url will be http://<ip>:<port>/mock_http/callback
-  - url: callback
+  - url: callback_html
 
     # HTTP Method:
     # Only support GET and POST for now
     type: post
 
     # Custom Return Body's Filepath:
-    # You can DIY body of return request with creating a body file
-    returnBodyFile: ./config/callback.body
+    # You can DIY body of return request by creating a body file
+    returnBodyFile: ./config/callback.html
 
     # Custom return Header:
     # You can DIY header of return request
@@ -19,10 +19,10 @@ urlList:          # Define your listen URL
       version: 1.220
       session: ab2b1aab2cce31111
 
-    # Custom return Status:
-    # default value is 200 ok
-    status: 200
-
-  - url: callback2
+  - url: callback_string
     type: get
-    returnBodyFile: ./config/callback
+    returnBodyFile: ./config/callback_string
+
+  - url: callback_file
+    type: get
+    returnBodyFile: ./config/callback_file.jpg

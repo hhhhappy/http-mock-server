@@ -19,7 +19,6 @@ type Url struct {
 	Type           string            `yaml:"type"`
 	ReturnBodyFile string            `yaml:"returnBodyFile"`
 	Header         map[string]string `yaml:"header"`
-	Status         int               `yaml:"status"`
 }
 
 var conf *Config

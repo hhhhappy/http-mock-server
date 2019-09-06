@@ -80,15 +80,11 @@ func callBackAction(context *gin.Context) {
 		return
 	}
 
-	if urlDefine.Status == 0 {
-		urlDefine.Status = http.StatusOK
-	}
-
 	if len(urlDefine.ReturnBodyFile) == 0 {		// Don't have custom return body, return default body
-		context.String(urlDefine.Status, `Hi, world. This is a greeting from Hhhhappy !`)
+		context.String(http.StatusOK, `Hi, world. This is a greeting from Hhhhappy !`)
 	}else{
 		context.File(urlDefine.ReturnBodyFile)
-		context.Status(urlDefine.Status)
+
 	}
 
 	// Set custom header
