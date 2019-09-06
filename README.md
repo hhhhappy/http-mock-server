@@ -15,9 +15,9 @@ So if there is any issues, please report it, I will resolve it as soon as possib
 
 Download zip file according to your operation system: 
 
-- Linux
-- Windows
-- Mac
+- [Linux](https://github.com/hhhhappy/http-mock-server/releases/download/v0.0.1/http-mock-server-linux.zip)
+- [Windows](https://github.com/hhhhappy/http-mock-server/releases/download/v0.0.1/http-mock-server-win.zip)
+- [Mac](https://github.com/hhhhappy/http-mock-server/releases/download/v0.0.1/http-mock-server-mac.zip)
 
 ### Install
 
