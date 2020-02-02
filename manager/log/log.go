@@ -1,8 +1,8 @@
-package logManager
+package log
 
 import (
 	"fmt"
-	"http-mock-server/manager/configManager"
+	"http-mock-server/manager/config"
 	"log"
 	"os"
 	"sync"
@@ -30,7 +30,7 @@ const messagePattern = `
 `
 
 func init() {
-	basePath := configManager.GetConf().LogPath
+	basePath := config.GetConf().LogPath
 
 	err := mkdir(basePath)
 	if err != nil {
@@ -106,12 +106,12 @@ func logToFile(msg string, writer *os.File) {
 
 // make request file path
 func getRequestFilePath(fileName string) string {
-	basePath := configManager.GetConf().LogPath
+	basePath := config.GetConf().LogPath
 	return fmt.Sprintf("%s%s%s", basePath, "/", fileName+".request")
 }
 
 // make log file path
 func getLogFilePath() string {
-	basePath := configManager.GetConf().LogPath
+	basePath := config.GetConf().LogPath
 	return fmt.Sprintf("%s%s%s", basePath, "/", "error.log")
 }

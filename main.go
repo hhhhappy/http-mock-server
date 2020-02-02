@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"http-mock-server/manager/configManager"
-	"http-mock-server/manager/logManager"
+	"http-mock-server/manager/config"
+	"http-mock-server/manager/log"
 	"io"
 	"net/http"
 	"path"
@@ -26,7 +26,7 @@ func main() {
 
 	testGroup := router.Group("/mock_http")
 	{
-		for _, url := range configManager.GetConf().UrlList {
+		for _, url := range config.GetConf().UrlList {
 			switch strings.ToUpper(url.Type) {
 			case HttpMethodPost:
 				testGroup.POST(url.Url, callBackAction)
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	server := &http.Server{
-		Addr:    ":" + configManager.GetConf().Port,
+		Addr:    ":" + config.GetConf().Port,
 		Handler: router,
 	}
 
@@ -71,11 +71,11 @@ func callBackAction(context *gin.Context) {
 	baseUrl:= path.Base(strings.Split(context.Request.RequestURI, "?")[0])
 
 	// Log received request
-	logManager.LogRequest(context.Request.Method, string(query), string(header), string(body), baseUrl)
+	log.LogRequest(context.Request.Method, string(query), string(header), string(body), baseUrl)
 
-	urlDefine := configManager.GetConf().GetUrlDefinition(baseUrl)
+	urlDefine := config.GetConf().GetUrlDefinition(baseUrl)
 	if urlDefine == nil {
-		logManager.Log("Can't find url's definition. Please check your configure file. Calling: " + baseUrl)
+		log.Log("Can't find url's definition. Please check your configure file. Calling: " + baseUrl)
 		context.String(http.StatusInternalServerError, ``)
 		return
 	}
