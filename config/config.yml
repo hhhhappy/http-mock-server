@@ -1,28 +1,2 @@
 port: 8588    # Define the listen Port
 logPath: ./   # Log output directory
-urlList:          # Define your listen URL
-    # Custom Url
-    # With this value, final url will be http://<ip>:<port>/mock_http/callback
-  - url: callback_html
-
-    # HTTP Method:
-    # Only support GET and POST for now
-    type: post
-
-    # Custom Return Body's Filepath:
-    # You can DIY body of return request by creating a body file
-    returnBodyFile: ./config/callback.html
-
-    # Custom return Header:
-    # You can DIY header of return request
-    header:
-      version: 1.220
-      session: ab2b1aab2cce31111
-
-  - url: callback_string
-    type: get
-    returnBodyFile: ./config/callback_string
-
-  - url: callback_file
-    type: get
-    returnBodyFile: ./config/callback_file.jpg

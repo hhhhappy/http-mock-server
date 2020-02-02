@@ -4,17 +4,22 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
-	"sync"
+	"path"
+)
+
+const (
+	configFilePath = "/config/config.yml"
+	requestFilePath = "/config/request.yml"
 )
 
 type Config struct {
-	Port              string `yaml:"port"`
-	PrintBufferLength int    `yaml:"printBufferLength"`
-	LogPath           string `yaml:"logPath"`
-	UrlList           []Url  `yaml:"urlList"`
+	Port              string    `yaml:"port"`
+	PrintBufferLength int       `yaml:"printBufferLength"`
+	LogPath           string    `yaml:"logPath"`
+	Requests          []Request `yaml:"urlList"`
 }
 
-type Url struct {
+type Request struct {
 	Url            string            `yaml:"url"`
 	Type           string            `yaml:"type"`
 	ReturnBodyFile string            `yaml:"returnBodyFile"`
@@ -22,36 +27,45 @@ type Url struct {
 }
 
 var conf *Config
-var once sync.Once
 
-func GetConf() *Config {
-	once.Do(func() {
-		//read file
-		pwd, err := os.Getwd()
+func init() {
+	pwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 
-		if err != nil {
-			panic(err)
-		}
+	//load config file
+	configFileByte, err := ioutil.ReadFile(path.Join(pwd, configFilePath))
+	if err != nil {
+		panic(err)
+	}
 
-		configFile, err := ioutil.ReadFile(pwd + "/config/config.yml")
+	conf = &Config{}
+	err = yaml.Unmarshal(configFileByte, conf)
+	if err != nil {
+		panic(err)
+	}
 
-		if err != nil {
-			panic(err)
-		}
-		conf = &Config{}
-		err = yaml.Unmarshal(configFile, conf)
+	//load request file
+	requestFileByte, err := ioutil.ReadFile(path.Join(pwd, requestFilePath))
+	if err != nil {
+		panic(err)
+	}
 
-		if err != nil {
-			panic(err)
-		}
-	})
-	return conf
+	err = yaml.Unmarshal(requestFileByte, &conf.Requests)
+	if err != nil {
+		panic(err)
+	}
 }
 
-func (conf Config) GetUrlDefinition(url string) (obj *Url) {
-	for key, unit := range conf.UrlList {
+func GetConf() Config {
+	return *conf
+}
+
+func (conf Config) GetRequestDefinition(url string) (obj *Request) {
+	for key, unit := range conf.Requests {
 		if unit.Url == url {
-			return &conf.UrlList[key]
+			return &conf.Requests[key]
 		}
 	}
 

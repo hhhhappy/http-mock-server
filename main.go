@@ -26,7 +26,7 @@ func main() {
 
 	testGroup := router.Group("/mock_http")
 	{
-		for _, url := range config.GetConf().UrlList {
+		for _, url := range config.GetConf().Requests {
 			switch strings.ToUpper(url.Type) {
 			case HttpMethodPost:
 				testGroup.POST(url.Url, callBackAction)
@@ -73,7 +73,7 @@ func callBackAction(context *gin.Context) {
 	// Log received request
 	log.LogRequest(context.Request.Method, string(query), string(header), string(body), baseUrl)
 
-	urlDefine := config.GetConf().GetUrlDefinition(baseUrl)
+	urlDefine := config.GetConf().GetRequestDefinition(baseUrl)
 	if urlDefine == nil {
 		log.Log("Can't find url's definition. Please check your configure file. Calling: " + baseUrl)
 		context.String(http.StatusInternalServerError, ``)
