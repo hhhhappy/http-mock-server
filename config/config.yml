@@ -1,2 +1,6 @@
 port: 8588    # Define the listen Port
-logPath: ./   # Log output directory
+logPath: ./output   # Log output directory
+defaultHeaders:  # Set default header for all the requests
+  Access-Control-Allow-Origin: "*"
+  Access-Control-Allow-Methods: "*"
+  Access-Control-Allow-Headers: "*"

@@ -15,11 +15,15 @@
   header:
     version: 1.220
     session: ab2b1aab2cce31111
+  # Custom response's status code
+  # If not set, return 200 OK by default
+  code: 201
 
 - url: callback_string
   type: get
   returnBodyFile: ./config/callback_string
-
+  code: 203
 - url: callback_file
   type: get
   returnBodyFile: ./config/callback_file.jpg
+  code: 209

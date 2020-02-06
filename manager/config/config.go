@@ -8,21 +8,23 @@ import (
 )
 
 const (
-	configFilePath = "/config/config.yml"
+	configFilePath  = "/config/config.yml"
 	requestFilePath = "/config/request.yml"
 )
 
 type Config struct {
-	Port              string    `yaml:"port"`
-	PrintBufferLength int       `yaml:"printBufferLength"`
-	LogPath           string    `yaml:"logPath"`
-	Requests          []Request `yaml:"urlList"`
+	Port              string            `yaml:"port"`
+	PrintBufferLength int               `yaml:"printBufferLength"`
+	LogPath           string            `yaml:"logPath"`
+	DefaultHeaders    map[string]string `yaml:"defaultHeaders"`
+	Requests          []Request         `yaml:"urlList"`
 }
 
 type Request struct {
 	Url            string            `yaml:"url"`
 	Type           string            `yaml:"type"`
 	ReturnBodyFile string            `yaml:"returnBodyFile"`
+	Code           int               `yaml:"code"`
 	Header         map[string]string `yaml:"header"`
 }
 

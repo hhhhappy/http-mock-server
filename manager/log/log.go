@@ -1,6 +1,7 @@
 package log
 
 import (
+	"encoding/json"
 	"fmt"
 	"http-mock-server/manager/config"
 	"log"
@@ -81,7 +82,7 @@ func LogRequest(method, query, header, body string, fileName string) {
 }
 
 // Log system error
-func Log(msg string) {
+func Log(msg interface{}) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	if logFileWriter == nil {
@@ -93,7 +94,17 @@ func Log(msg string) {
 		}
 	}
 
-	logToFile(msg, logFileWriter)
+	if m, ok := msg.(string); ok {
+		logToFile(m, logFileWriter)
+	}else{
+		m, err := json.Marshal(msg)
+		if err != nil {
+			fmt.Println(err)
+			logToFile("Can not encode interface to json: " + err.Error(), logFileWriter)
+		}else{
+			logToFile(string(m), logFileWriter)
+		}
+	}
 }
 
 // log to fileManager
