@@ -11,7 +11,8 @@ import (
 
 var (
 	/* File writer */
-	logFileWriter        *os.File
+	errLogFileWriter     *os.File
+	accessLogFileWriter  *os.File
 	requestFileWriterMap = map[string]*os.File{}
 	mutex                *sync.RWMutex
 )
@@ -40,23 +41,19 @@ func init() {
 
 	mutex = new(sync.RWMutex)
 
-	logFileWriter, err = os.OpenFile(getLogFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	errLogFileWriter, err = os.OpenFile(getErrLogFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+
+	accessLogFileWriter, err = os.OpenFile(getAccessLogFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func mkdir(dir string) error {
-	_, err := os.Stat(dir)
-
-	// dir exists
-	if err == nil {
-		return nil
-	}
-
-	err = os.MkdirAll(dir, 0777)
-
-	return err
+func GetAccessWriter() *os.File {
+	return accessLogFileWriter
 }
 
 // Log received requests
@@ -85,9 +82,9 @@ func LogRequest(method, query, header, body string, fileName string) {
 func Log(msg interface{}) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	if logFileWriter == nil {
+	if errLogFileWriter == nil {
 		var err error
-		logFileWriter, err = os.OpenFile(getLogFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		errLogFileWriter, err = os.OpenFile(getErrLogFilePath(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
@@ -95,14 +92,14 @@ func Log(msg interface{}) {
 	}
 
 	if m, ok := msg.(string); ok {
-		logToFile(m, logFileWriter)
-	}else{
+		logToFile(m, errLogFileWriter)
+	} else {
 		m, err := json.Marshal(msg)
 		if err != nil {
 			fmt.Println(err)
-			logToFile("Can not encode interface to json: " + err.Error(), logFileWriter)
-		}else{
-			logToFile(string(m), logFileWriter)
+			logToFile("Can not encode interface to json: "+err.Error(), errLogFileWriter)
+		} else {
+			logToFile(string(m), errLogFileWriter)
 		}
 	}
 }
@@ -121,8 +118,27 @@ func getRequestFilePath(fileName string) string {
 	return fmt.Sprintf("%s%s%s", basePath, "/", fileName+".request")
 }
 
-// make log file path
-func getLogFilePath() string {
+// make error log file path
+func getErrLogFilePath() string {
 	basePath := config.GetConf().LogPath
 	return fmt.Sprintf("%s%s%s", basePath, "/", "error.log")
+}
+
+// make access log file path
+func getAccessLogFilePath() string {
+	basePath := config.GetConf().LogPath
+	return fmt.Sprintf("%s%s%s", basePath, "/", "access.log")
+}
+
+func mkdir(dir string) error {
+	_, err := os.Stat(dir)
+
+	// dir exists
+	if err == nil {
+		return nil
+	}
+
+	err = os.MkdirAll(dir, 0777)
+
+	return err
 }

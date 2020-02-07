@@ -5,14 +5,28 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"http-mock-server/manager/config"
+	"http-mock-server/manager/log"
+	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 var errMethodNotSupported = errors.New("Method not supported: ")
 
 func Run() error {
-	router := gin.Default()
+	gin.DisableConsoleColor()
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	router.Use(gin.Recovery())
+
+	// Log access
+	if config.GetConf().LogAccessSummary {
+		gin.DefaultWriter = io.MultiWriter(log.GetAccessWriter())
+		router.Use(gin.LoggerWithFormatter(logFormat))
+	}
+
+	// Set default headers
 	if len(config.GetConf().DefaultHeaders) != 0 {
 		router.Use(func(context *gin.Context) {
 			for key, value := range config.GetConf().DefaultHeaders {
@@ -21,21 +35,10 @@ func Run() error {
 		})
 	}
 
+	// Set router
 	mockGroup := router.Group("/mock_http")
-	{
-		for _, request := range config.GetConf().Requests {
-			switch strings.ToUpper(request.Type) {
-			case http.MethodPost:
-				mockGroup.POST(request.Url, callback)
-				break
-			case http.MethodGet:
-				mockGroup.GET(request.Url, callback)
-				break
-			default:
-				fmt.Println(errMethodNotSupported.Error() + request.Type)
-				return errMethodNotSupported
-			}
-		}
+	if err := setRouter(mockGroup);err != nil{
+		return err
 	}
 
 	server := &http.Server{
@@ -50,4 +53,51 @@ func Run() error {
 	}
 
 	return nil
+}
+
+func setRouter(g *gin.RouterGroup) error {
+	for _, request := range config.GetConf().Requests {
+		switch strings.ToUpper(request.Type) {
+		case http.MethodPost:
+			g.POST(request.Url, callback)
+			break
+		case http.MethodGet:
+			g.GET(request.Url, callback)
+			break
+		case http.MethodDelete:
+			g.DELETE(request.Url, callback)
+			break
+		case http.MethodHead:
+			g.HEAD(request.Url, callback)
+			break
+		case http.MethodOptions:
+			g.OPTIONS(request.Url, callback)
+			break
+		case http.MethodPatch:
+			g.PATCH(request.Url, callback)
+			break
+		case http.MethodPut:
+			g.PUT(request.Url, callback)
+			break
+		default:
+			fmt.Println(errMethodNotSupported.Error() + request.Type)
+			return errMethodNotSupported
+		}
+	}
+
+	return nil
+}
+
+func logFormat(param gin.LogFormatterParams) string {
+	return fmt.Sprintf("%s - [%s] \"%s %s %s %d %s \"%s\" %s\"\n",
+		param.ClientIP,
+		param.TimeStamp.Format(time.RFC1123),
+		param.Method,
+		param.Path,
+		param.Request.Proto,
+		param.StatusCode,
+		param.Latency,
+		param.Request.UserAgent(),
+		param.ErrorMessage,
+	)
 }

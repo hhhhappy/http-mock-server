@@ -1,6 +1,6 @@
   # Custom Url
-  # With this value, final url will be http://<ip>:<port>/mock_http/callback_url
-- url: callback_html
+  # With this value, final url will be http://<ip>:<port>/mock_http/post_example
+- url: post_example
 
   # HTTP Method:
   # Only support GET and POST for now
@@ -8,7 +8,7 @@
 
   # Custom Return Body's Filepath:
   # You can DIY body of return request by creating a body file
-  returnBodyFile: ./config/callback.html
+  returnBodyFile: ./config/requests/post_example.html
 
   # Custom return Header:
   # You can DIY header of return request
@@ -19,11 +19,34 @@
   # If not set, return 200 OK by default
   code: 201
 
-- url: callback_string
+- url: get_example
   type: get
-  returnBodyFile: ./config/callback_string
-  code: 203
-- url: callback_file
-  type: get
-  returnBodyFile: ./config/callback_file.jpg
+  returnBodyFile: ./config/requests/get_example.jpg
   code: 209
+
+- url: delete_example
+  type: delete
+  returnBodyFile: ./config/requests/delete_example
+  code: 203
+
+- url: options_example
+  type: options
+  returnBodyFile: ./config/requests/options_example
+  code: 200
+
+- url: head_example
+  type: head
+  header:
+    VERSION: 1.333
+    KEY: "ab2b1aab2cce31111"
+  code: 401
+
+- url: put_example
+  type: put
+  returnBodyFile: ./config/requests/put_example
+  code: 200
+
+- url: patch_example
+  type: patch
+  returnBodyFile: ./config/requests/patch_example
+  code: 200

@@ -16,6 +16,7 @@ type Config struct {
 	Port              string            `yaml:"port"`
 	PrintBufferLength int               `yaml:"printBufferLength"`
 	LogPath           string            `yaml:"logPath"`
+	LogAccessSummary  bool              `yaml:"logAccessSummary"`
 	DefaultHeaders    map[string]string `yaml:"defaultHeaders"`
 	Requests          []Request         `yaml:"urlList"`
 }
