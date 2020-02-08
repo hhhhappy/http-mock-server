@@ -8,9 +8,15 @@ import (
 	"http-mock-server/manager/log"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 )
+
+const urlPrefix = "/mock_http"
+const requestDefLog = "[%s]		\"%s\"	"
+const withBodyLog = "Response body: \"%s\"\n"
+const withoutBodyLog = "Without response body\n"
 
 var errMethodNotSupported = errors.New("Method not supported: ")
 
@@ -36,7 +42,7 @@ func Run() error {
 	}
 
 	// Set router
-	mockGroup := router.Group("/mock_http")
+	mockGroup := router.Group(urlPrefix)
 	if err := setRouter(mockGroup);err != nil{
 		return err
 	}
@@ -46,6 +52,7 @@ func Run() error {
 		Handler: router,
 	}
 
+	fmt.Println("Server is Listening to port:", config.GetConf().Port)
 	err := server.ListenAndServe()
 	if err != nil {
 		fmt.Println(err.Error())
@@ -57,7 +64,8 @@ func Run() error {
 
 func setRouter(g *gin.RouterGroup) error {
 	for _, request := range config.GetConf().Requests {
-		switch strings.ToUpper(request.Type) {
+		requestMethod := strings.ToUpper(request.Type)
+		switch requestMethod {
 		case http.MethodPost:
 			g.POST(request.Url, callback)
 			break
@@ -83,8 +91,14 @@ func setRouter(g *gin.RouterGroup) error {
 			fmt.Println(errMethodNotSupported.Error() + request.Type)
 			return errMethodNotSupported
 		}
+		if len(request.ReturnBodyFile) == 0{
+			fmt.Printf(requestDefLog + withoutBodyLog, requestMethod, path.Join(urlPrefix, request.Url))
+		}else{
+			fmt.Printf(requestDefLog + withBodyLog, requestMethod, path.Join(urlPrefix, request.Url), request.ReturnBodyFile)
+		}
 	}
 
+	fmt.Printf("%d APIs were set!\n", len(config.GetConf().Requests))
 	return nil
 }
 
