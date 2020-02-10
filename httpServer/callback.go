@@ -1,20 +1,17 @@
 package httpServer
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"http-mock-server/manager/config"
 	"http-mock-server/manager/log"
 	"io"
 	"net/http"
 	"os"
-	"path"
-	"strings"
 )
 
 func callback(context *gin.Context) {
-	header,_ := json.MarshalIndent(context.Request.Header, "", "    ")
-	query,_ := json.MarshalIndent(context.Request.URL.Query(), "", "    ")
+	header, _ := arrStringMap(context.Request.Header).MarshalJSON()
+	query, _ := arrStringMap(context.Request.URL.Query()).MarshalJSON()
 
 	// Retrieve Body
 	buf := make([]byte, 128)
@@ -28,7 +25,7 @@ func callback(context *gin.Context) {
 		}
 	}
 
-	baseUrl:= path.Base(strings.Split(context.Request.RequestURI, "?")[0])
+	baseUrl := context.Request.URL.Path
 
 	// Log received request
 	log.LogRequest(context.Request.Method, string(query), string(header), string(body), baseUrl)
@@ -47,7 +44,7 @@ func callback(context *gin.Context) {
 
 	if requestDef.Code == 0 {
 		context.Writer.WriteHeader(http.StatusOK)
-	}else{
+	} else {
 		context.Writer.WriteHeader(requestDef.Code)
 	}
 

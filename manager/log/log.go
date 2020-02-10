@@ -6,6 +6,7 @@ import (
 	"http-mock-server/manager/config"
 	"log"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -17,10 +18,7 @@ var (
 	mutex                *sync.RWMutex
 )
 
-const messagePattern = `
-[Method]
-%s
-
+const messagePattern = `%s
 [Query] 
 %s
 
@@ -115,6 +113,10 @@ func logToFile(msg string, writer *os.File) {
 // make request file path
 func getRequestFilePath(fileName string) string {
 	basePath := config.GetConf().LogPath
+	if fileName[0] == '/' {
+		fileName = fileName[1:]
+	}
+	fileName = strings.ReplaceAll(fileName, "/", ".")
 	return fmt.Sprintf("%s%s%s", basePath, "/", fileName+".request")
 }
 

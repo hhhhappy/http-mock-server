@@ -46,7 +46,7 @@
   returnBodyFile: ./config/requests/put_example
   code: 200
 
-- url: patch_example
+- url: /patch/patch_example
   type: patch
   returnBodyFile: ./config/requests/patch_example
   code: 200

@@ -8,12 +8,10 @@ import (
 	"http-mock-server/manager/log"
 	"io"
 	"net/http"
-	"path"
 	"strings"
 	"time"
 )
 
-const urlPrefix = "/mock_http"
 const requestDefLog = "[%s]		\"%s\"	"
 const withBodyLog = "Response body: \"%s\"\n"
 const withoutBodyLog = "Without response body\n"
@@ -42,8 +40,7 @@ func Run() error {
 	}
 
 	// Set router
-	mockGroup := router.Group(urlPrefix)
-	if err := setRouter(mockGroup);err != nil{
+	if err := setRouter(router);err != nil{
 		return err
 	}
 
@@ -62,7 +59,7 @@ func Run() error {
 	return nil
 }
 
-func setRouter(g *gin.RouterGroup) error {
+func setRouter(g gin.IRoutes) error {
 	for _, request := range config.GetConf().Requests {
 		requestMethod := strings.ToUpper(request.Type)
 		switch requestMethod {
@@ -92,9 +89,9 @@ func setRouter(g *gin.RouterGroup) error {
 			return errMethodNotSupported
 		}
 		if len(request.ReturnBodyFile) == 0{
-			fmt.Printf(requestDefLog + withoutBodyLog, requestMethod, path.Join(urlPrefix, request.Url))
+			fmt.Printf(requestDefLog + withoutBodyLog, requestMethod, request.Url)
 		}else{
-			fmt.Printf(requestDefLog + withBodyLog, requestMethod, path.Join(urlPrefix, request.Url), request.ReturnBodyFile)
+			fmt.Printf(requestDefLog + withBodyLog, requestMethod, request.Url, request.ReturnBodyFile)
 		}
 	}
 
