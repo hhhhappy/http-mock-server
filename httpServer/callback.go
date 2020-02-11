@@ -10,8 +10,15 @@ import (
 )
 
 func callback(context *gin.Context) {
-	header, _ := arrStringMap(context.Request.Header).MarshalJSON()
-	query, _ := arrStringMap(context.Request.URL.Query()).MarshalJSON()
+	header, err := arrStringMap(context.Request.Header).MarshalJSON()
+	if err != nil {
+		log.Log(err)
+	}
+
+	query, err := arrStringMap(context.Request.URL.Query()).MarshalJSON()
+	if err != nil {
+		log.Log(err)
+	}
 
 	// Retrieve Body
 	buf := make([]byte, 128)
@@ -25,14 +32,14 @@ func callback(context *gin.Context) {
 		}
 	}
 
-	baseUrl := context.Request.URL.Path
+	urlPath := context.Request.URL.Path
 
 	// Log received request
-	log.LogRequest(context.Request.Method, string(query), string(header), string(body), baseUrl)
+	log.LogRequest(context.Request.Method, string(query), string(header), string(body), urlPath)
 
-	requestDef := config.GetConf().GetRequestDefinition(baseUrl)
+	requestDef := config.GetConf().GetRequestDefinition(urlPath)
 	if requestDef == nil {
-		log.Log("Can't find url's definition. Please check your configure file. Calling: " + baseUrl)
+		log.Log("Can't find url's definition. Please check your configure file. Calling: " + urlPath)
 		context.String(http.StatusInternalServerError, ``)
 		return
 	}
@@ -52,7 +59,7 @@ func callback(context *gin.Context) {
 		f, err := os.Open(requestDef.ReturnBodyFile)
 		if err != nil {
 			log.Log(err.Error())
-			log.Log("Can't find url's definition. Please check your configure file. Calling: " + baseUrl)
+			log.Log("Can't find url's definition. Please check your configure file. Calling: " + urlPath)
 			context.String(http.StatusInternalServerError, ``)
 			return
 		}
