@@ -147,8 +147,4 @@ admin=admin&date=1980-7-1
 
 ## Examples
 
-Examples are included in source, you can test it by yourself.
-
-- Return HTML: `http://<ip>:<port>//mock_http/callback_html`
-- Return  Raw text: `http://<ip>:<port>//mock_http/callback_string`
-- Return File: `http://<ip>:<port>//mock_http/callback_file`
+Examples are included in directory config/requests, you can test it by yourself.
