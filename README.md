@@ -1,11 +1,11 @@
 # http-mock-server
  A simple http mock server, based on [Gin](https://github.com/gin-gonic/gin) framework.
 
-Can be used in **Linux** , **Windows** and **Mac**. 
+Can be used in **Linux** , **Windows** and **Mac**.
 
-*For Mac version, I  don't have a Mac yet (It's freaking expensive...), so I never test it , sorry for that. Hopefully it will work.*
+Method supported: GET, POST, DELETE, OPTIONS, HEAD, PUT, PATCH
 
-Bug life is a lifestyle of developer. 
+Notice: do not support file uploading !
 
 So if there is any issues, please report it, I will resolve it as soon as possible.
 
@@ -34,36 +34,25 @@ Or execute `http-mock-server.exe` in CLI.
 The execution output will be:
 
 ```powershell
-C:\Users\hhhhappy\Documents\http-mock-server\http-mock-server>http-mock-server.exe
-[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
-
-[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
- - using env:   export GIN_MODE=release
- - using code:  gin.SetMode(gin.ReleaseMode)
-
-[GIN-debug] POST   /mock_http/callback       --> main.callBackAction (4 handlers)
-[GIN-debug] GET    /mock_http/callback2      --> main.callBackAction (4 handlers)
+[POST]		"post_example"	Response body: "./config/requests/post_example.html"
+[GET]		"get_example"	Response body: "./config/requests/get_example.jpg"
+[DELETE]		"delete_example"	Response body: "./config/requests/delete_example"
+[OPTIONS]		"options_example"	Response body: "./config/requests/options_example"
+[HEAD]		"head_example"	Without response body
+[PUT]		"put_example"	Response body: "./config/requests/put_example"
+[PATCH]		"/patch/patch_example"	Response body: "./config/requests/patch_example"
+7 APIs were set!
+Server is Listening to port: 8588
 ```
 
-#### Linux
+#### Linux or Mac
 
 Execute `http-mock-server` in CLI.
 
-The execution output will be:
+The execution output will be same as Windows.
 
-```
-[hhhhappy@linux http-mock-server]$ ./http-mock-server 
-[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
 
-[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
- - using env:	export GIN_MODE=release
- - using code:	gin.SetMode(gin.ReleaseMode)
-
-[GIN-debug] POST   /mock_http/callback       --> main.callBackAction (4 handlers)
-[GIN-debug] GET    /mock_http/callback2      --> main.callBackAction (4 handlers)
-```
-
-## Configure
+## Server Configure
 
 You can find configure file in `config/config.yml`
 
@@ -71,93 +60,89 @@ Its content will be:
 
 ```yaml
 port: 8588    # Define the listen Port
-logPath: ./   # Log output directory
-urlList:          # Define your listen URL
-    # Custom Url
-    # With this value, final url will be http://<ip>:<port>/mock_http/callback
-  - url: callback_html
-
-    # HTTP Method:
-    # Only support GET and POST for now
-    type: post
-
-    # Custom Return Body's Filepath:
-    # You can DIY body of return request by creating a body file
-    returnBodyFile: ./config/callback.html
-
-    # Custom return Header:
-    # You can DIY header of return request
-    header:
-      version: 1.220
-      session: ab2b1aab2cce31111
-
-  - url: callback_string
-    type: get
-    returnBodyFile: ./config/callback_string
-
-  - url: callback_file
-    type: get
-    returnBodyFile: ./config/callback_file.jpg
+logPath: ./output   # Log output directory
+logAccessSummary: true   # If need to log access's summary
+defaultHeaders:  # Set common header for all the requests
+  Access-Control-Allow-Origin: "*"
+  Access-Control-Allow-Methods: "*"
+  Access-Control-Allow-Headers: "*"
 ```
 
 Explanation:
 
 - ***port***: http server listen port
 - ***logPath***: where should it put log files
-- ***urlList***: definition of mock http URL, you can define multiple URL here.
+- ***logAccessSummary***: if need to log access log
+- ***defaultHeaders***: you can define common headers by writing a key-value map here.
+
+## Request definition
+You can define your own requests in `config/requests.yml`
+
+````yaml
+  # Custom Url
+  # With this value, final url will be http://<ip>:<port>/mock_http/post_example
+- url: post_example
+
+  # HTTP Method:
+  # Only support GET and POST for now
+  type: post
+
+  # Custom Return Body's Filepath:
+  # You can DIY body of return request by creating a body file
+  returnBodyFile: ./config/requests/post_example.html
+
+  # Custom return Header:
+  # You can DIY header of return request
+  header:
+    version: 1.220
+    session: ab2b1aab2cce31111
+  # Custom response's status code
+  # If not set, return 200 OK by default
+  code: 201
+
+- url: get_example
+  type: get
+  returnBodyFile: ./config/requests/get_example.jpg
+  code: 209
+````
+Explanation:
   - ***url***: base of URL
-    - `mock_http` is fixed string, can not be changed for now.
-    - For example:  `callback`  => `http://<ip>:<port>/mock_http/callback`
+    - For example:  `/mock/get_example`  => `http://<ip>:<port>/mock/get_example`
   - ***type***: HTTP Method of URL, only support **POST** and **GET** for now
   - ***returnBodyFile***: Custom Return Body's filepath, You can DIY body of return request by creating a body file
   - ***header***: Custom return Header
+  - ***code***: Custom response's status code, if not set, return 200 OK by default
 
 ## Log Request
 
 Content of all requests will be saved in files (*.request). Filename is based on your custom url. 
 
-For example, I defined URL `/mock_http/callback2`, after sending requests, a file `callback2.request` will be created in current directory. 
+For example, I defined URL `/mock_http/callback2`, after sending requests, a file `mock_http.callback2.request` will be created in log directory. 
 
 It's content will be:
 
 ```bash
-2019/09/06 14:01:05 
-[Method]
-POST
-
+2020/02/11 11:36:53 PATCH
 [Query] 
-{}
+{
+    "i": ["1"],
+    "q": ["9"]
+}
 
 [Header]
 {
-    "Accept": [
-        "*/*"
-    ],
-    "Accept-Encoding": [
-        "gzip, deflate"
-    ],
-    "Cache-Control": [
-        "no-cache"
-    ],
-    "Connection": [
-        "keep-alive"
-    ],
-    "Content-Length": [
-        "52"
-    ],
-    "Content-Type": [
-        "text/plain"
-    ],
-    "Postman-Token": [
-        "5178aac3-d1fa-4738-af63-3c69cd74bed7"
-    ],
-    "User-Agent": [
-        "PostmanRuntime/7.6.0"
-    ]
+    "Accept-Encoding": ["gzip, deflate, br"],
+    "Connection": ["keep-alive"],
+    "Postman-Token": ["df95c946-aede-47fd-96af-e89a97df5c57"],
+    "Content-Length": ["25"],
+    "Content-Type": ["application/x-www-form-urlencoded"],
+    "User-Agent": ["PostmanRuntime/7.22.0"],
+    "Accept": ["*/*"],
+    "Cache-Control": ["no-cache"]
 }
 
 [Body]
-Hhhhappy est un beau garçon. Hhhhappy is handsome.
+admin=admin&date=1980-7-1
 ```
 
 ## Examples

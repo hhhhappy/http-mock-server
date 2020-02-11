@@ -3,7 +3,7 @@
 - url: post_example
 
   # HTTP Method:
-  # Only support GET and POST for now
+  # Only support GET, POST, DELETE, OPTIONS, HEAD, PUT, PATCH
   type: post
 
   # Custom Return Body's Filepath:
